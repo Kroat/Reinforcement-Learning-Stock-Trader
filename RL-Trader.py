@@ -5,10 +5,10 @@
 # 2.) Place RL-Trader.py in a project directory
 # 3.) cd into the project directory
 # 4.) Pass the command:
-#       RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR] [HOW MANY TRADES TO RUN BEFORE REINFORCEMENT LEARNING BEGINS]
+#       RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR] [STARTING PORTFOLIO VALUE] [HOW MANY TRADES TO RUN BEFORE REINFORCEMENT LEARNING BEGINS]
 #
-# ex: RL-Trader.py F 1/1/2000 200
-# ^ This runs RL-Trader against Ford's historical data and analyzes 200 trades before the Reinforcement Learning begins
+# ex: RL-Trader.py F 1/1/2000 1000 200
+# ^ This runs RL-Trader against Ford's historical data and analyzes 200 trades before the Reinforcement Learning begins with a beginning portfolio of $1,000
 # ** Please note that this RL script only trades one equity at a time!
 
 # Edit these values to change how the RL brain learns
@@ -29,11 +29,11 @@ print "\nThanks for using the Reinforcement Learning Stock Trader by Matija Krol
 time.sleep(1)
 
 # Get passed-in arguments
-GIVEN_EQUITY, START_DATE, TRADES_TO_RUN = sys.argv[1], sys.argv[2], sys.argv[3]
+GIVEN_EQUITY, START_DATE, STARTING_PORTFOLIO_VALUE, TRADES_TO_RUN = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 
 # Error check arguments
-if len(sys.argv) != 4:
-    print "To run: RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR]  [HOW MANY TRADES TO RUN BEFORE REINFORCEMENT LEARNING BEGINS]\nEx. RL-Trader.py F 1/1/2000 200"
+if len(sys.argv) != 5:
+    print "To run: RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR] [STARTING PORTFOLIO VALUE] [HOW MANY TRADES TO RUN BEFORE REINFORCEMENT LEARNING BEGINS]\nEx. RL-Trader.py F 1/1/2000 1000 200"
     exit()
 
 # Get Equity Data
@@ -185,7 +185,7 @@ def run():
     profit = 0
     # Move through all possible trades
     for x in range(TOTAL_TRADES):
-        # RL brain chooses the trade
+        # RL Agent chooses the trade
         trade = choose_trade(x - 1, q_table)
         # Find the payoff from the trade
         result = determine_payoff(x, trade)
@@ -200,8 +200,8 @@ def run():
         q_predict = q_table.iloc[select_state(x), trade]
         # If statement for last trade, tweak this
         if x == TOTAL_TRADES-1:
-            q_target = result #+ GAMMA * q_table.iloc[select_state(x), :
-                    #].max()
+            q_target = result + GAMMA * q_table.iloc[select_state(x), :
+                    ].max()
         else:
             q_target = result + GAMMA * q_table.iloc[select_state(x), :
                     ].max()
@@ -225,4 +225,7 @@ Q-table:
     q_table["Reference"] = ['When Equity Appreciated', 'When Equity Held Value', 'When Equity Depreciated']
     print q_table
     # Show profits
-    print '\nProfits from trading ' + GIVEN_EQUITY + ': $' + str(round(profit, 2))
+    calc_profits = 1 + round(profit, 2)/100.0
+    calc_profits = calc_profits * 1000.0
+    print '\nProfits from trading ' + str(GIVEN_EQUITY) + ' with starting portfolio of $' + str(STARTING_PORTFOLIO_VALUE) + ': $' + str(calc_profits)
+
