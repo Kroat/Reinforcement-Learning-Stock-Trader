@@ -5,10 +5,10 @@
 # 2.) Place RL-Trader.py in a project directory
 # 3.) cd into the project directory
 # 4.) Pass the command:
-#       RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR]
+#       RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR] [HOW MANY TRADES TO RUN BEFORE REINFORCEMENT LEARNING BEGINS]
 #
-# ex: RL-Trader.py F 1/1/2000
-
+# ex: RL-Trader.py F 1/1/2000 200
+# ^ This runs RL-Trader against Ford's historical data and analyzes 200 trades before the Reinforcement Learning begins
 # ** Please note that this RL script only trades one equity at a time!
 
 # Edit these values to change how the RL brain learns
@@ -25,15 +25,15 @@ import pandas as pd
 import sys, time, datetime
 
 # Welcome message
-print "Thanks for using the Reinforcement Learning Stock Trader by Matija Krolo. If you experience an error, it is most likely because the Equity/Stock you chose to analyize does not have available data before the date you entered. If you encounter an error, please check Yahoo.com/finance to ensure it is not the case."
+print "\nThanks for using the Reinforcement Learning Stock Trader by Matija Krolo. If you experience an error, it is most likely because the Equity/Stock you chose to analyize does not have available data before the date you entered. If you encounter an error, please check Yahoo.com/finance to ensure it is not the case. \n"
 time.sleep(1)
 
 # Get passed-in arguments
-GIVEN_EQUITY, START_DATE = sys.argv[1], sys.argv[2]
+GIVEN_EQUITY, START_DATE, TRADES_TO_RUN = sys.argv[1], sys.argv[2], sys.argv[3]
 
 # Error check arguments
-if len(sys.argv) != 3:
-    print "To run: RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR]\nEx. RL-Trader.py F 1/1/2000"
+if len(sys.argv) != 4:
+    print "To run: RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR]  [HOW MANY TRADES TO RUN BEFORE REINFORCEMENT LEARNING BEGINS]\nEx. RL-Trader.py F 1/1/2000 200"
     exit()
 
 # Get Equity Data
@@ -50,6 +50,11 @@ RF_Rate = web.get_data_yahoo('^TNX', end='1/1/2019', start=START_DATE,
 STATES = 3
 ACTIONS = ['buy', 'sell']
 TOTAL_TRADES = len(EQUITY['Close']) 
+
+# Error Check
+if int(TRADES_TO_RUN) > TOTAL_TRADES:
+    print "\nThere are only " + str(TOTAL_TRADES) + " trading days available from data, which is greater than the input of " + str(TRADES_TO_RUN) + ". Please try again."
+    exit()
 
 # Q-Table generator function
 def build_q_table(n_states, actions):
@@ -81,6 +86,9 @@ data = pd.DataFrame(compile_data)
 
 # Agent brain for RL
 def choose_trade(pointer, q_table):
+    # Logic is only running
+    if pointer < int(TRADES_TO_RUN):
+        print ("Reinforcement Learning not initiated yet, Q-Table still building.")
     # Find the trade decision from our trade logic
     analytic_decision = state_logic(pointer)
     # Select state from Q-Table
@@ -88,7 +96,7 @@ def choose_trade(pointer, q_table):
     # If the greedy factor is less than a randomly distributed number, if there are no values
     # on the Q-table, or if less than half the possible trades have been run without our trading logic,
     # return our analytical trade logic decision
-    if np.random.uniform() > EPSILON or state_actions.all() == 0 or pointer > round(len(data['EQUITY'])/2,2):
+    if np.random.uniform() > EPSILON or state_actions.all() == 0 or pointer < int(TRADES_TO_RUN):
         return analytic_decision
     # Otherwise, return what has been working
     else:
@@ -162,6 +170,7 @@ def determine_payoff(pointer, trade):
             print 'Out of the market at $' + str(round(data['EQUITY'
                     ][pointer], 2))
             return 0.0
+ 
 
 # Don't edit these
 priceAtPurchase = 0
@@ -185,7 +194,7 @@ def run():
         # Append result from trade to aggregate profit
         aggregate_profit.append(result)
         # Slows down the script
-        #time.sleep(.05)
+        time.sleep(.05)
         # Append to profit
         profit += result
         q_predict = q_table.iloc[select_state(x), trade]
@@ -216,4 +225,4 @@ Q-table:
     q_table["Reference"] = ['When Equity Appreciated', 'When Equity Held Value', 'When Equity Depreciated']
     print q_table
     # Show profits
-    print 'Profits from trading ' + GIVEN_EQUITY + ': $' + str(round(profit, 2))
+    print '\nProfits from trading ' + GIVEN_EQUITY + ': $' + str(round(profit, 2))
