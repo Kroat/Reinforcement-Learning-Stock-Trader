@@ -8,11 +8,11 @@ To use:
 1. Make sure all necessary libraries are installed: Numpy, Pandas, Scipy
 1. Copy RL-Trader.py to a project directory
 2. cd into the project directory
-3. Pass the following commmand: ```RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR]```
+3. Pass the following commmand: ```RL-Trader.py [EQUITY] [START DATE - DAY/MONTH/YEAR] [DAYS TO LEARN]```
 
-For example: ```RL-Trader.py F 1/1/2000```
+For example: ```RL-Trader.py F 1/1/2000 100```
 
-This runs the RL script against Ford's historical data and shows trades the logic would make, the resulting Q-Table at the end, as well as the profit.
+This runs the RL script against Ford's historical data and learns using our trading logic (```state_logic```) for 100 days before Reinforcement Learning kicks in. The resulting Q-Table, as well as the profit, is then printed.
 
 ## What this code does well (so far)
 
