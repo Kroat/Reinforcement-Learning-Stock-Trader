@@ -12,7 +12,7 @@
 # ** Please note that this RL script only trades one equity at a time!
 
 # Edit these values to change how the RL brain learns
-EPSILON = .1
+EPSILON = .3
 ALPHA = .1
 GAMMA = .1
 
@@ -85,9 +85,10 @@ def choose_trade(pointer, q_table):
     analytic_decision = state_logic(pointer)
     # Select state from Q-Table
     state_actions = q_table.iloc[select_state(pointer), :]
-    # If the greedy factor is less than a randomly distributed number, or if there are no values
-    # on the Q-table, return our analytical trade logic decision
-    if np.random.uniform() > EPSILON or state_actions.all() == 0:
+    # If the greedy factor is less than a randomly distributed number, if there are no values
+    # on the Q-table, or if less than half the possible trades have been run without our trading logic,
+    # return our analytical trade logic decision
+    if np.random.uniform() > EPSILON or state_actions.all() == 0 or pointer > round(len(data['EQUITY'])/2,2):
         return analytic_decision
     # Otherwise, return what has been working
     else:
@@ -165,7 +166,7 @@ def determine_payoff(pointer, trade):
 # Don't edit these
 priceAtPurchase = 0
 inPortfolio = False
-
+aggregate_profit = []
 # Runs RL script
 def run():
     # Builds the Q-Table
@@ -181,15 +182,17 @@ def run():
         result = determine_payoff(x, trade)
         # Display to user
         print 'Profit from instance: ' + str(round(result, 2))
-        # Slows down script
-        time.sleep(.05)
+        # Append result from trade to aggregate profit
+        aggregate_profit.append(result)
+        # Slows down the script
+        #time.sleep(.05)
         # Append to profit
         profit += result
         q_predict = q_table.iloc[select_state(x), trade]
         # If statement for last trade, tweak this
         if x == TOTAL_TRADES-1:
-            q_target = result + GAMMA * q_table.iloc[select_state(x), :
-                    ].max()
+            q_target = result #+ GAMMA * q_table.iloc[select_state(x), :
+                    #].max()
         else:
             q_target = result + GAMMA * q_table.iloc[select_state(x), :
                     ].max()
@@ -200,11 +203,12 @@ def run():
     if inPortfolio:
         print "**** Please note that Equity is still held and may be traded later, this may affect profits ****"
     # Return the Q-Table and profit as a tuple
+    profit = np.sum(aggregate_profit)
     return (q_table, profit)
 
 # Ensures everything is loaded
 if __name__ == '__main__':
-    (q_table, profit) = run()
+    q_table, profit = run()
     print '''\r
 Q-table:
 '''
@@ -212,4 +216,4 @@ Q-table:
     q_table["Reference"] = ['When Equity Appreciated', 'When Equity Held Value', 'When Equity Depreciated']
     print q_table
     # Show profits
-    print 'Profits from trading ' + GIVEN_EQUITY + ': $' + str(round(profit, 2)) 
+    print 'Profits from trading ' + GIVEN_EQUITY + ': $' + str(round(profit, 2))
