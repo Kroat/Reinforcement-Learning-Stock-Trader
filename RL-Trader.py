@@ -226,6 +226,5 @@ Q-table:
     print q_table
     # Show profits
     calc_profits = 1 + round(profit, 2)/100.0
-    calc_profits = calc_profits * 1000.0
+    calc_profits = calc_profits * float(STARTING_PORTFOLIO_VALUE)
     print '\nProfits from trading ' + str(GIVEN_EQUITY) + ' with starting portfolio of $' + str(STARTING_PORTFOLIO_VALUE) + ': $' + str(calc_profits)
-
