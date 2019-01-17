@@ -23,6 +23,7 @@ import pandas_datareader.data as web
 from math import log
 import pandas as pd
 import sys, time, datetime
+from Logic.logic import calculate_BSM, state_logic
 
 # Welcome message
 print "\nThanks for using the Reinforcement Learning Stock Trader by Matija Krolo. If you experience an error, it is most likely because the Equity/Stock you chose to analyize does not have available data before the date you entered. If you encounter an error, please check Yahoo.com/finance to ensure it is not the case. \n"
@@ -64,21 +65,6 @@ def build_q_table(n_states, actions):
                          columns=actions)
     return table
 
-def calculate_BSM(
-    Equity,
-    Strike_Price,
-    RF_Rate,
-    MKT_Vol,
-    TimeFrame,
-    ):
-    d1 = (np.log(Equity / Strike_Price) + (RF_Rate + 0.5 * MKT_Vol
-          ** 2) * TimeFrame) / (float(MKT_Vol) * np.sqrt(TimeFrame))
-    d2 = (np.log(Equity / Strike_Price) + (RF_Rate - 0.5 * MKT_Vol
-          ** 2) * TimeFrame) / (float(MKT_Vol) * np.sqrt(TimeFrame))
-    value = Equity * stats.norm.cdf(d1, 0.0, 1.0) - Strike_Price \
-        * np.exp(-RF_Rate * TimeFrame) * stats.norm.cdf(d2, 0.0, 1.0)
-    return value
-
 # Create dictionary
 compile_data = {'EQUITY': EQUITY['Adj Close'], 'RF': RF_Rate['Adj Close'
                 ], 'SIGMA': MKT_VOLATIILTY['Adj Close']}
@@ -92,7 +78,7 @@ def choose_trade(pointer, q_table):
     if pointer < int(TRADES_TO_RUN):
         print ("Reinforcement Learning not initiated yet, Q-Table still building.")
     # Find the trade decision from our trade logic
-    analytic_decision = state_logic(pointer)
+    analytic_decision = state_logic(pointer, data)
     # Select state from Q-Table
     state_actions = q_table.iloc[select_state(pointer), :]
     # If the greedy factor is less than a randomly distributed number, if there are no values
@@ -120,27 +106,6 @@ def select_state(pointer):
         return 1  # Equity Held Value
     if current_price < previous_price:
         return 2  # Equity Depreciated
-
-# Function that contains our investment logic. Edit this to change how the RL brain acts
-def state_logic(pointer):
-    # BSM for if the option's exercise price appreciates by 5%
-    price_increase = calculate_BSM(data['EQUITY'][pointer],
-                                   data['EQUITY'][pointer] * 1.05, # 5% appreciation
-                                   data['RF'][pointer] / 100,
-                                   data['SIGMA'][pointer] / 100, 31.0 # Roughly one month timeframe
-                                   / 365.0)
-    # BSM for if the option's exercise price holds its value
-    stable_price = calculate_BSM(data['EQUITY'][pointer], data['EQUITY'
-                                 ][pointer], data['RF'][pointer] / 100,
-                                 data['SIGMA'][pointer] / 100, 31.0
-                                 / 365.0)
-    # Tinker with this 
-    returns = log(stable_price / price_increase)
-    # Tinker with the return threshold as well
-    if returns <= 2:
-        return 0  # Sell
-    if returns > 2:
-        return 1  # Buy
 
 # Function to find the profit from trades
 def determine_payoff(pointer, trade, inPortfolio):
@@ -172,7 +137,7 @@ def determine_payoff(pointer, trade, inPortfolio):
             return (0.0, inPortfolio)
  
 
-# Don't edit these
+# Global variables will be moved into a profit class at next commit
 priceAtPurchase = 0
  
 # Runs RL script
