@@ -1,10 +1,12 @@
+# Import libraries for trading strategy
 from scipy import stats
 import numpy as np
+from math import *
 
 # Function that contains our investment logic. Edit this to change how the RL brain acts
 # This is a simple boilerplate trading strategy that should be modified to yield better returns
 # ** If you are changing the trading strategy, keep 0 for Sell and 1 for Buy ** 
-def state_logic(pointer):
+def state_logic(pointer, data):
     # BSM for if the option's exercise price appreciates by 5%
     price_increase = calculate_BSM(data['EQUITY'][pointer],
                                    data['EQUITY'][pointer] * 1.05, # 5% appreciation
