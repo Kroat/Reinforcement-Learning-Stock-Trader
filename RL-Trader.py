@@ -48,7 +48,9 @@ RF_Rate = web.get_data_yahoo('^TNX', end='1/1/2019', start=START_DATE,
 
 # Don't edit these
 STATES = 3
+# Actions of Q-Table
 ACTIONS = ['buy', 'sell']
+# Holds total trades that can be made
 TOTAL_TRADES = len(EQUITY['Close']) 
 
 # Error Check
@@ -141,9 +143,7 @@ def state_logic(pointer):
         return 1  # Buy
 
 # Function to find the profit from trades
-def determine_payoff(pointer, trade):
-    # Check to see if the equity is already in the portfolio
-    global inPortfolio
+def determine_payoff(pointer, trade, inPortfolio):
     # Hold the value that the equity was purchased at
     global priceAtPurchase
     if inPortfolio:  # Stock is already owned
@@ -152,35 +152,35 @@ def determine_payoff(pointer, trade):
                     ][pointer], 2))
             print 'Purchase Price: $' + str(round(priceAtPurchase, 2))
             inPortfolio = True
-            return 0
+            return (0, inPortfolio)
         if trade == 1:  # Sell the Equity
             inPortfolio = False  # Remove Equity from portfolio
             print '** Equity sold at $' + str(round(data['EQUITY'
                     ][pointer], 2))
-            return data['EQUITY'][pointer] - priceAtPurchase
+            return (data['EQUITY'][pointer] - priceAtPurchase, inPortfolio)
     if inPortfolio == False:  # Equity is not owned
         if trade == 0:  # Buy the equity
             inPortfolio = True  # Add it to the portfolio
             print '** Equity bought at $' + str(round(data['EQUITY'
                     ][pointer], 2))  # Display Price Equity was purchased at
             priceAtPurchase = data['EQUITY'][pointer]  # Record the price at which the Equity was purchased
-            return 0
+            return (0.0, inPortfolio)
         if trade == 1:  # Sell
             inPortfolio = False
             print 'Out of the market at $' + str(round(data['EQUITY'
                     ][pointer], 2))
-            return 0.0
+            return (0.0, inPortfolio)
  
 
 # Don't edit these
 priceAtPurchase = 0
-inPortfolio = False
-aggregate_profit = []
+ 
 # Runs RL script
 def run():
     # Builds the Q-Table
     q_table = build_q_table(STATES, ACTIONS)
-    global inPortfolio
+    inPortfolio = False
+    aggregate_profit = []
     # Assuming 0 profit -- or a portfolio with a reference of $0
     profit = 0
     # Move through all possible trades
@@ -188,7 +188,7 @@ def run():
         # RL Agent chooses the trade
         trade = choose_trade(x - 1, q_table)
         # Find the payoff from the trade
-        result = determine_payoff(x, trade)
+        result, inPortfolio = determine_payoff(x, trade, inPortfolio)
         # Display to user
         print 'Profit from instance: ' + str(round(result, 2))
         # Append result from trade to aggregate profit
