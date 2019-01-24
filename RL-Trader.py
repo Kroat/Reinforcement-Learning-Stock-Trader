@@ -16,6 +16,16 @@ EPSILON = .3
 ALPHA = .1
 GAMMA = .1
 
+# Create agent class
+class Agent:
+    def __init__(self, alpha_input, epsilon_input, gamma_input):
+        self.alpha = alpha_input
+        self.epsilon = 1 - epsilon_input
+        self.gamma = gamma_input
+
+# Create class object
+agent = Agent(EPSILON, ALPHA, GAMMA)
+
 # Import Libraries
 import numpy as np
 from scipy import stats
@@ -84,7 +94,7 @@ def choose_trade(pointer, q_table):
     # If the greedy factor is less than a randomly distributed number, if there are no values
     # on the Q-table, or if less than half the possible trades have been run without our trading logic,
     # return our analytical trade logic decision
-    if np.random.uniform() > EPSILON or state_actions.all() == 0 or pointer < int(TRADES_TO_RUN):
+    if np.random.uniform() > float(agent.epsilon) or state_actions.all() == 0 or pointer < int(TRADES_TO_RUN):
         return analytic_decision
     # Otherwise, return what has been working
     else:
@@ -165,13 +175,13 @@ def run():
         q_predict = q_table.iloc[select_state(x), trade]
         # If statement for last trade, tweak this
         if x == TOTAL_TRADES-1:
-            q_target = result + GAMMA * q_table.iloc[select_state(x), :
+            q_target = result + float(agent.gamma) * q_table.iloc[select_state(x), :
                     ].max()
         else:
-            q_target = result + GAMMA * q_table.iloc[select_state(x), :
+            q_target = result + float(agent.gamma) * q_table.iloc[select_state(x), :
                     ].max()
         # Append to located cell in Q-Table || Tweak this
-        q_table.iloc[select_state(x), trade] += ALPHA * (q_target
+        q_table.iloc[select_state(x), trade] += float(agent.alpha) * (q_target
                 - q_predict)
         print '\n'
     if inPortfolio:
