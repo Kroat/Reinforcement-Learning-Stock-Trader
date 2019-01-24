@@ -11,12 +11,12 @@ def state_logic(pointer, data):
     price_increase = calculate_BSM(data['EQUITY'][pointer],
                                    data['EQUITY'][pointer] * 1.05, # 5% appreciation
                                    data['RF'][pointer] / 100,
-                                   data['SIGMA'][pointer] / 100, 31.0 # Roughly one month timeframe
+                                   data['SIGMA'][pointer] / 100, 30.42 # Roughly one month timeframe
                                    / 365.0)
     # BSM for if the option's exercise price holds its value
     stable_price = calculate_BSM(data['EQUITY'][pointer], data['EQUITY'
                                  ][pointer], data['RF'][pointer] / 100,
-                                 data['SIGMA'][pointer] / 100, 31.0
+                                 data['SIGMA'][pointer] / 100, 30.42
                                  / 365.0)
     # Tinker with this 
     returns = log(stable_price / price_increase)
