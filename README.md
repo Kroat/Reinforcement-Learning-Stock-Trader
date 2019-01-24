@@ -26,6 +26,14 @@ I have found that this script works especially well against times of economic co
 
 Unlike other Reinforcement Learning scripts, it is better to keep the greedy factor (Epsilon) low (around .05-.5) as it increases the amount of analytical decisions the script makes. Because markets have a stochastic factor, it did not make sense to have the script choose a random 'buy' or 'sell' call, but instead use logic an analyist might use (this is under ```state_logic```), only maximizing when there is enough data in the Q-Table (analagous to traders using trading strategies that have worked before).
 
+## Add your own trading logic!
+Navigate to ```Logic/logic.py``` and edit the 
+```python 
+def state_logic()
+``` 
+function (ignore the function inputs). Add your trading logic here --  when the function returns 0, the agent learns to sell. When the fucntion returns 1, the agent learns to buy.
+
+
 ## Planned Features to Add:
 1. Calculation for Alpha compared to given Equity/Market
 2. Ability to add more than one equity
