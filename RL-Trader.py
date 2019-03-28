@@ -24,7 +24,7 @@ class Agent:
         self.gamma = gamma_input
 
 # Create class object
-agent = Agent(EPSILON, ALPHA, GAMMA)
+agent = Agent(ALPHA, EPSILON, GAMMA)
 
 # Import Libraries
 import numpy as np
